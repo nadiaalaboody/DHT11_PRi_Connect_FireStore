@@ -1,0 +1,61 @@
+#DHT
+import sys
+from gpiozero import LED
+import Adafruit_DHT
+
+#Firebase and Firestore
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+
+#Time
+import datetime
+import time
+
+#parameters
+sensor= Adafruit_DHT.DHT11
+gpio=17
+red = LED(21)
+
+# Use the application default credentials
+cred = credentials.Certificate('Your json file goes here.json')
+firebase_admin.initialize_app(cred)
+db = firestore.client()
+
+#Delete Document
+#db.collection(u'collection name').document(u'document name').delete()
+
+#Define empty set to read data from sensor 
+data = {}
+
+i = 1
+while True:
+#Collect Data
+	humidity, temperature = Adafruit_DHT.read_retry(sensor, gpio)
+	temperature = (temperature*9/5.0)+ 32
+	CurrentDate=datetime.datetime.now()
+	print(CurrentDate)
+	Y=CurrentDate.year
+	M=CurrentDate.month
+	D=CurrentDate.day
+	H=CurrentDate.hour
+	m=CurrentDate.minute
+	s=CurrentDate.second
+  
+#	print('Temp={0:0.1f}F  Humidity={1:0.1f}%'.format(temperature, humidity))
+
+	data ={
+		u'1_ID': i,
+		u'2_Hum': humidity,
+		u'3_Temp':temperature,
+		u'4_CurrentTime':CurrentDate,
+		u'5_CurrentYear': Y,
+		u'6_CurrentMonth':M,
+		u'7_CurrentDay':D 
+		}
+
+#Push data to Firestore
+	db.collection(u'DHT11').document().set(data)
+	time.sleep(2)
+	i+=1
+
